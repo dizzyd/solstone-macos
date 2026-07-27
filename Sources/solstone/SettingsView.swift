@@ -434,7 +434,10 @@ struct SettingsView: View {
             startJournalMarkRederiveIfNeeded()
         }
         .onChange(of: selectedTab) { _, newValue in
-            if newValue == .status {
+            // Both tabs read setupProbeSnapshot. Without a refresh they render
+            // SetupProbeSnapshot.checking, whose placeholder values are not a
+            // reading of the OS.
+            if newValue == .status || newValue == .permissions {
                 refreshSetupProbes()
             }
         }
@@ -507,6 +510,7 @@ struct SettingsView: View {
         case .permissions:
             permissionsTab.onAppear {
                 appState.markSettingsTabVisited(.permissions)
+                refreshSetupProbes()
             }
         case .updates:
             UpdatesTabView(controller: updateController, copy: UpdatesCopy(provider: .solstone))
@@ -782,6 +786,15 @@ struct SettingsView: View {
                         HStack {
                             Spacer()
                             switch setupProbeSnapshot.microphoneCause {
+                            case .authorized:
+                                // The OS says granted but appState.microphoneGranted was
+                                // captured at launch, so this session is not using the mic yet.
+                                HStack(spacing: 6) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(.green)
+                                    Text(UICopy.SETTINGS_PERMISSIONS_MIC_GRANTED_NEEDS_RESTART)
+                                        .foregroundStyle(.secondary)
+                                }
                             case .denied:
                                 microphoneSettingsButton(message: UICopy.SETTINGS_PERMISSIONS_MIC_DENIED)
                             case .restricted:

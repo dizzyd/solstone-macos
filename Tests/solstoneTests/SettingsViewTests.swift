@@ -14,6 +14,33 @@ struct SettingsViewTests {
         #expect(SettingsView.Tab.help.rawValue == "help")
     }
 
+    /// Both panes read `setupProbeSnapshot`. Without a refresh on appear the permissions
+    /// pane renders `SetupProbeSnapshot.checking`, whose placeholder `microphoneCause` is
+    /// `.unknown` — reported to the owner as "couldn't check" no matter what the OS says,
+    /// and immune to a `tccutil reset` because nothing on that path reads TCC.
+    @Test func statusAndPermissionsPanesRefreshProbesOnAppear() throws {
+        let source = try readWireUpSource("Sources/solstone/SettingsView.swift")
+        let detailContent = try extract(
+            from: source,
+            start: "private var detailContent: some View",
+            end: "    private func applyPendingSettingsTab"
+        )
+
+        let permissionsCase = try extract(
+            from: detailContent,
+            start: "case .permissions:",
+            end: "case .updates:"
+        )
+        #expect(permissionsCase.contains("refreshSetupProbes()"))
+
+        let statusCase = try extract(
+            from: detailContent,
+            start: "case .status:",
+            end: "case .observer:"
+        )
+        #expect(statusCase.contains("refreshSetupProbes()"))
+    }
+
     @Test func journalPaneRendersClientPanelBranches() throws {
         let source = try readWireUpSource("Sources/solstone/SettingsView.swift")
         let serviceSection = try extract(

@@ -85,4 +85,15 @@ struct PermissionOutcomeTests {
             cause: .unknown
         ) == .unavailable)
     }
+
+    /// `microphoneGranted` is captured at launch and reloads only on app restart, so a
+    /// grant made while the app is running leaves it stale. The live cause is the durable
+    /// fact and must win, otherwise settings reports a granted mic as unavailable.
+    @Test func microphoneTrustsLiveAuthorizationOverStaleLaunchCache() {
+        #expect(PermissionOutcome.microphone(
+            initialPermissionCheckComplete: true,
+            microphoneGranted: false,
+            cause: .authorized
+        ) == .granted)
+    }
 }

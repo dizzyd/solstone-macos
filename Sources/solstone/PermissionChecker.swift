@@ -49,13 +49,17 @@ struct PermissionChecker {
 
     var microphoneAuthorizationCause: MicrophoneAuthorizationCause {
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
+        case .authorized:
+            return .authorized
         case .notDetermined:
             return .notDetermined
         case .denied:
             return .denied
         case .restricted:
             return .restricted
-        default:
+        @unknown default:
+            // Reserved for a status AVFoundation adds later. `.unknown` must mean
+            // "the OS told us something we do not understand", never "we did not ask".
             return .unknown
         }
     }

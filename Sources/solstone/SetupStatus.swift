@@ -33,6 +33,7 @@ internal func classifySetupTopology(
 }
 
 internal enum MicrophoneAuthorizationCause: Equatable, Sendable {
+    case authorized
     case notDetermined
     case denied
     case restricted
@@ -69,6 +70,11 @@ internal enum PermissionOutcome: Equatable, Sendable {
         if microphoneGranted { return .granted }
 
         switch cause {
+        case .authorized:
+            // `microphoneGranted` is captured at launch and reloads only on app
+            // restart, so a grant made mid-session leaves it stale. The live
+            // authorization status is the durable fact; trust it over the cache.
+            return .granted
         case .notDetermined, .denied, .restricted:
             return .notGranted
         case .unknown:
